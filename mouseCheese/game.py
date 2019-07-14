@@ -1,5 +1,6 @@
 import pygame
 from enum import Enum
+import sys
 
 class Cell(Enum):
     empty=0
@@ -16,12 +17,12 @@ class Direction(Enum):
 class Grid:
     def __init__(self):
         grid = [[0, 0, 0, 0], [2, 0, 2, 0], [0, 0, 2, 2], [2, 0, 0, 3], [2,2,2,2]]
-        height = len(grid)
-        width = len(grid[0])
+        self.height = len(grid)
+        self.width = len(grid[0])
         self.grid = [[Cell(x) for x in y] for y in grid]
     
     def getCell(self, posx, posy):
-        return self.grid[posx][posy]
+        return self.grid[posx][posy]               
 
 class Mouse:
     def __init__(self, grid):
@@ -49,18 +50,50 @@ class Mouse:
             self.posy+=1
         self.updateState()
         
-
+class Color:
+    white=(255,255,255)
+    black=(0,0,0)
 
 class Game:
-    def __init__(self):
+    def __init__(self, graphic=True):
         self.grid = Grid()
         self.mouse = Mouse(self.grid)
         self.score = 0
         self.end = False
-    
+        self.graphic = graphic
+        self.xScale = 100
+        self.yScale = 100
+        if graphic:
+            pygame.init()
+            self.screen = pygame.display.set_mode((self.grid.width*self.xScale, self.grid.height*self.yScale))
+            self.screen.fill(Color.white)
+            self.images = {}
+            for cell in Cell:
+                if cell != Cell.empty:
+                    self.images[cell] = self.transform(pygame.image.load('./images/'+cell.name+'.png'))
+
+    def transform(self, surface):
+        return pygame.transform.scale(surface, (self.xScale-5, self.yScale-5))
+    def mainLoop(self):
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT: sys.exit()
+            self.display()
+
+    def display(self):
+        if self.graphic:
+            state = self.getState()
+            for x in range(self.grid.width):
+                for y in range(self.grid.height):
+                    pygame.draw.rect(self.screen, Color.black, (x*self.xScale,y*self.yScale,self.xScale,self.yScale), 1)
+                    if (state[y][x] != Cell.empty):
+                        self.screen.blit(self.images[state[y][x]],(x*self.xScale,y*self.yScale))
+            pygame.display.update()
+
     def getState(self):
         temp = self.grid.grid[:]
         temp[self.mouse.posx][self.mouse.posy] = Cell.mouse
+        return temp
     
     def test(self):
         if self.mouse.alive:
@@ -82,7 +115,9 @@ class Game:
 
 
 def main():
-    Game()
+    game = Game()
+    game.mainLoop()
+
 
 if __name__ == "__main__":
     main()
