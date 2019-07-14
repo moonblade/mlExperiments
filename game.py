@@ -18,12 +18,14 @@ class Grid:
 class Mouse:
     def __init__(self, grid):
         self.grid = grid
+        # up down left right
         self.directions = [0, 1, 2, 3]
         self.alive = True
-        self.matrix = [[self.getMat2((y,x)) for x in range(len(grid.grid[0]))] for y in range(len(grid.grid))]
-        self.rows = len(self.matrix)
-        self.columns = len(self.matrix[0])
         self.position = (0,0)
+        self.rows = len(self.grid.grid)
+        self.columns = len(self.grid.grid[0])
+        self.matrix = [[self.getMat2((y,x)) for x in range(len(grid.grid[0]))] for y in range(len(grid.grid))]
+        print(self.matrix)
         self.prev = (0, 0)
         self.alpha = 0.5
         self.noOfMoves = 0
@@ -33,6 +35,17 @@ class Mouse:
     def setAlpha(self, num):
         self.alpha = num
 
+    def getMat2(self, pos):
+        ps = self.getNearby(pos, True)
+        l = []
+        for p in ps[0]:
+            if p in ps[1]:
+                l.append(self.getMat(p))
+            else:
+                l.append(-1000)
+        return l
+ 
+
     def getMat(self, pos):
         if self.grid.get(pos) == Grid.EMPTY:
             return 0
@@ -41,14 +54,18 @@ class Mouse:
         if self.grid.get(pos) == Grid.CHEESE:
             return 1000
         
-    def getNearby(self):
+    def getNearby(self, pos=None, All=False):
+        if pos is None:
+            pos = self.position
         p = []
         for x in [-1, 1]:
-                p.append((self.position[0]+x, self.position[1], [-1, 1].index(x)))
+                p.append((pos[0]+x, pos[1], [-1, 1].index(x)))
         for y in [-1,1]:
-                p.append((self.position[0], self.position[1]+y, [-1,1].index(y)+2))
-        p = list(filter(lambda x: x[0]>=0 and x[0]<self.rows and x[1]>=0 and x[1]<self.columns, p))
-        return p
+                p.append((pos[0], pos[1]+y, [-1,1].index(y)+2))
+        q = list(filter(lambda x: x[0]>=0 and x[0]<self.rows and x[1]>=0 and x[1]<self.columns, p))
+        if All:
+            return (p,q)
+        return q
 
     def pprint(self):
         if debug:
@@ -66,25 +83,35 @@ class Mouse:
         self.position = (0,0)
         self.alive = True
 
-    def set(self, pos, reward):
+    def opp(self, direction):
+        if direction == 0:
+            return 1
+        if direction == 1:
+            return 0
+        if direction == 2:
+            return 3
+        if direction == 3:
+            return 2
+
+    def set(self, pos, reward, direction):
         # data = self.matrix[pos[0]][pos[1]] * (1 - self.alpha) + self.alpha * ( self.decay * self.get(self.position) + reward)
         nextMax = self.getMax()
-        data = self.matrix[pos[0]][pos[1]] * (1 - self.alpha) + self.alpha * (reward + self.decay * nextMax)
-        print(self.matrix[pos[0]][pos[1]], self.alpha, self.decay, self.get(self.position), data)
-        self.matrix[pos[0]][pos[1]] = data
+        data = self.matrix[pos[0]][pos[1]][direction] * (1 - self.alpha) + self.alpha * (reward + self.decay * nextMax)
+        print(self.matrix[pos[0]][pos[1]][direction], self.alpha, self.decay, self.get(self.position), data)
+        self.matrix[pos[0]][pos[1]][direction] = data
+        self.matrix[self.position[0]][self.position[1]][self.opp(direction)] = self.matrix[self.position[0]][self.position[1]][self.opp(direction)] * (1-self.alpha) + (-100 + self.decay * 1000)
+        
 
     def get(self, position):
         return self.matrix[position[0]][position[1]]
 
     def getMax(self):
-        p = self.getNearby()
-        matrix = [self.get(x) for x in p]
+        matrix = self.matrix[self.position[0]][self.position[1]]
         return max(matrix)
 
     def correctMove(self):
-        p = self.getNearby()
-        matrix = [self.get(x) for x in p]
-        dir = p[matrix.index(max(matrix))][2]
+        matrix = self.matrix[self.position[0]][self.position[1]]
+        dir = matrix.index(max(matrix))
         self.move(dir)
 
     def makeMove(self):
@@ -136,10 +163,10 @@ class Mouse:
             diry = -1 if direction==2 else 1
         self.prev = self.position
         self.position = (self.position[0] + dirx, self.position[1] + diry)
-        self.check()
+        self.check(direction)
         self.pprint()
     
-    def check(self):
+    def check(self, direction):
         reward = self.getMat(self.position)
         if (grid.get(self.position) == Grid.CAT):
             self.alive = False
@@ -147,15 +174,14 @@ class Mouse:
         if (grid.get(self.position) == Grid.CHEESE):
             self.alive = False
             self.score += 1000
-        self.set(self.prev, reward)
-        
+        self.set(self.prev, reward, direction)
 
 
 if __name__ == "__main__":
     grid = Grid()
     m = Mouse(grid)
     epoch = 100
-    perEpoch = 1000
+    perEpoch = 100
     for x in range(epoch):
         for y in range(perEpoch):
             m.makeMove()
