@@ -79,13 +79,13 @@ class Game:
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_LEFT:
-                        self.move(Direction.left)
+                        self.makeMove(Direction.left)
                     if event.key == pygame.K_RIGHT:
-                        self.move(Direction.right)
+                        self.makeMove(Direction.right)
                     if event.key == pygame.K_UP:
-                        self.move(Direction.up)
+                        self.makeMove(Direction.up)
                     if event.key == pygame.K_DOWN:
-                        self.move(Direction.down)
+                        self.makeMove(Direction.down)
                 if event.type == pygame.QUIT: sys.exit()
             self.display()
 
@@ -109,13 +109,11 @@ class Game:
         if self.mouse.alive:
             self.score += 1
         else:
+            self.score -= 1000
             self.end = True
         if self.mouse.hasCheese:
             self.score += 1000
             self.end = True    
-        if (self.end):
-            print(self.score)
-            self.reset()
     
     def reset(self):
         self.end = False
@@ -123,9 +121,16 @@ class Game:
         self.grid = Grid()
         self.mouse = Mouse(self.grid)
 
+    def makeMove(self, direction):
+        self.move(direction)
+        if (self.end):
+            print(self.score)
+            self.reset()
+
     def move(self, direction):
         self.mouse.move(direction)
         self.test()
+        return self.score
 
 
 def main():
