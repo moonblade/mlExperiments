@@ -22,7 +22,7 @@ class Grid:
         self.grid = [[Cell(x) for x in y] for y in grid]
     
     def getCell(self, posx, posy):
-        return self.grid[posx][posy]               
+        return self.grid[posy][posx]               
 
 class Mouse:
     def __init__(self, grid):
@@ -66,7 +66,6 @@ class Game:
         if graphic:
             pygame.init()
             self.screen = pygame.display.set_mode((self.grid.width*self.xScale, self.grid.height*self.yScale))
-            self.screen.fill(Color.white)
             self.images = {}
             for cell in Cell:
                 if cell != Cell.empty:
@@ -74,14 +73,25 @@ class Game:
 
     def transform(self, surface):
         return pygame.transform.scale(surface, (self.xScale-5, self.yScale-5))
+
     def mainLoop(self):
         while True:
             for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_LEFT:
+                        self.move(Direction.left)
+                    if event.key == pygame.K_RIGHT:
+                        self.move(Direction.right)
+                    if event.key == pygame.K_UP:
+                        self.move(Direction.up)
+                    if event.key == pygame.K_DOWN:
+                        self.move(Direction.down)
                 if event.type == pygame.QUIT: sys.exit()
             self.display()
 
     def display(self):
         if self.graphic:
+            self.screen.fill(Color.white)
             state = self.getState()
             for x in range(self.grid.width):
                 for y in range(self.grid.height):
@@ -91,8 +101,8 @@ class Game:
             pygame.display.update()
 
     def getState(self):
-        temp = self.grid.grid[:]
-        temp[self.mouse.posx][self.mouse.posy] = Cell.mouse
+        temp = [[x for x in y] for y in self.grid.grid]
+        temp[self.mouse.posy][self.mouse.posx] = Cell.mouse
         return temp
     
     def test(self):
@@ -101,7 +111,11 @@ class Game:
         else:
             self.end = True
         if self.mouse.hasCheese:
-            self.score += 1000        
+            self.score += 1000
+            self.end = True    
+        if (self.end):
+            print(self.score)
+            self.reset()
     
     def reset(self):
         self.end = False
