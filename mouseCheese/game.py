@@ -1,6 +1,7 @@
 import pygame
 from enum import Enum
 import sys
+import os
 
 class Cell(Enum):
     empty=0
@@ -69,7 +70,7 @@ class Game:
             self.images = {}
             for cell in Cell:
                 if cell != Cell.empty:
-                    self.images[cell] = self.transform(pygame.image.load('./images/'+cell.name+'.png'))
+                    self.images[cell] = self.transform(pygame.image.load(os.path.dirname(os.path.abspath(__file__)) + '/images/'+cell.name+'.png'))
 
     def transform(self, surface):
         return pygame.transform.scale(surface, (self.xScale-5, self.yScale-5))
@@ -107,7 +108,7 @@ class Game:
     
     def test(self):
         if self.mouse.alive:
-            self.score += 1
+            self.score += 0
         else:
             self.score -= 1000
             self.end = True
