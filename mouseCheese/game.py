@@ -3,6 +3,7 @@ from enum import IntEnum
 import sys
 import os
 import numpy as np
+import time
 
 class Cell(IntEnum):
     empty=0
@@ -108,12 +109,13 @@ class Game:
                     if (state[y][x] != Cell.empty):
                         self.screen.blit(self.images[state[y][x]],(x*self.xScale,y*self.yScale))
             pygame.display.update()
+            time.sleep(0.1)
 
     def getStateString(self):
         temp = np.array(self.getState())
         temp = temp.flatten()
         temp = ''.join(map(str,map(int,list(temp))))
-        print(temp)
+        return temp
 
     def getState(self):
         temp = [[x for x in y] for y in self.grid.grid]
@@ -143,8 +145,9 @@ class Game:
             self.reset()
 
     def whatIfMove(self, direction):
+        # returns delscore
         self.mouse.whatIfMove(direction)
-        score = self.score
+        score = 0
         if not self.mouse.alive:
             score -= 1000
         if self.mouse.hasCheese:
@@ -155,6 +158,7 @@ class Game:
     def move(self, direction):
         self.mouse.move(direction)
         self.test()
+        self.display()
         return self.score
 
 
