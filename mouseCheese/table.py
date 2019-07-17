@@ -1,8 +1,9 @@
 from game import Game
 
 class Table:
-    def __init__(self):
+    def __init__(self, epoch=1000):
         self.alpha = 0.1
+        self.epsilon = 0.01
         self.gamma = 0.9
         self.qtable = {}
 
@@ -12,9 +13,10 @@ class Table:
         return self.qtable[state]
             
 def main():
-    table = {}
-    game = Game()
-    game.getStateString()
+    table = Table()
+    game = Game(False)
+    print(table.getQValues(game.getStateString()))
+    print(game.whatIfMove(1))
     pass
 
 if __name__ == "__main__":

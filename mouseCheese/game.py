@@ -41,6 +41,13 @@ class Mouse:
         if cell == Cell.cheese:
             self.hasCheese = True
 
+    def whatIfMove(self, direction):
+        self.saveClass = self.__dict__
+        self.move(direction)
+    
+    def rollBack(self):
+        self.__dict__.update(self.saveClass)
+        
     def move(self, direction):
         if direction == Direction.left and self.posx>0:
             self.posx-=1
@@ -134,6 +141,16 @@ class Game:
         if (self.end):
             print(self.score)
             self.reset()
+
+    def whatIfMove(self, direction):
+        self.mouse.whatIfMove(direction)
+        score = self.score
+        if not self.mouse.alive:
+            score -= 1000
+        if self.mouse.hasCheese:
+            score += 1000
+        self.mouse.rollBack()
+        return score
 
     def move(self, direction):
         self.mouse.move(direction)
