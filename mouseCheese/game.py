@@ -48,7 +48,19 @@ class Mouse:
     
     def rollBack(self):
         self.__dict__.update(self.saveClass)
-        
+    
+    def getValidMoves(self):
+        moves = []
+        if self.posx>0:
+            moves.append(Direction.left)
+        if self.posx<self.grid.width-1:
+            moves.append(Direction.right)
+        if self.posy>0:
+            moves.append(Direction.up)
+        if self.posy<self.grid.height-1:
+            moves.append(Direction.down)
+        return moves     
+
     def move(self, direction):
         if direction == Direction.left and self.posx>0:
             self.posx-=1
@@ -81,6 +93,9 @@ class Game:
                 if cell != Cell.empty:
                     self.images[cell] = self.transform(pygame.image.load(os.path.dirname(os.path.abspath(__file__)) + '/images/'+cell.name+'.png'))
 
+    def getValidMoves(self):
+        return self.mouse.getValidMoves()
+
     def transform(self, surface):
         return pygame.transform.scale(surface, (self.xScale-5, self.yScale-5))
 
@@ -112,6 +127,7 @@ class Game:
             time.sleep(0.1)
 
     def getStateString(self):
+        return self.mouse.posx + self.mouse.posy * self.grid.height
         temp = np.array(self.getState())
         temp = temp.flatten()
         temp = ''.join(map(str,map(int,list(temp))))
