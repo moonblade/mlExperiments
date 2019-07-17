@@ -1,15 +1,16 @@
 import pygame
-from enum import Enum
+from enum import IntEnum
 import sys
 import os
+import numpy as np
 
-class Cell(Enum):
+class Cell(IntEnum):
     empty=0
     mouse=1
     cat=2
     cheese=3
 
-class Direction(Enum):
+class Direction(IntEnum):
     up=0
     down=1
     left=2
@@ -100,6 +101,12 @@ class Game:
                     if (state[y][x] != Cell.empty):
                         self.screen.blit(self.images[state[y][x]],(x*self.xScale,y*self.yScale))
             pygame.display.update()
+
+    def getStateString(self):
+        temp = np.array(self.getState())
+        temp = temp.flatten()
+        temp = ''.join(map(str,map(int,list(temp))))
+        print(temp)
 
     def getState(self):
         temp = [[x for x in y] for y in self.grid.grid]
