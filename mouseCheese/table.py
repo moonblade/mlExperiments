@@ -21,7 +21,6 @@ class Brain:
     def step(self):
         move = self.findMove()
         state = self.game.getStateString()
-        # print(state, str(move))
         self.game.move(move)
         self.updateQval(state, move, self.game.score - self.lastScore)
         self.lastScore = self.game.score
@@ -50,14 +49,15 @@ class Brain:
             # good move
             state = self.game.getStateString()
             qvals = self.getQValues(state)
-            dirs = self.game.getValidMoves()
-            maxv = -float('inf')
-            maxd = dirs[0]
-            for dir in dirs:
-                if qvals[int(dir)] > maxv:
-                    maxv = qvals[int(dir)]
-                    maxd = dir
-            return maxd
+            # dirs = self.game.getValidMoves()
+            # maxv = -float('inf')
+            # maxd = dirs[0]
+            # for dir in dirs:
+            #     if qvals[int(dir)] > maxv:
+            #         maxv = qvals[int(dir)]
+            #         maxd = dir
+            # return maxd
+            return Direction(qvals.index(max(qvals)))
         else:
             # random move
             return random.choice(self.game.getValidMoves())

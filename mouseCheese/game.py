@@ -10,6 +10,7 @@ class Cell(IntEnum):
     mouse=1
     cat=2
     cheese=3
+    smallCheese=4
 
 class Direction(IntEnum):
     up=0
@@ -19,11 +20,14 @@ class Direction(IntEnum):
 
 class Grid:
     def __init__(self):
-        grid = [[0, 0, 0, 0], [2, 0, 2, 0], [0, 0, 2, 2], [2, 0, 0, 3], [2,2,2,2]]
+        grid = [[0, 0, 0, 0], [2, 0, 0, 0], [0, 0, 2, 0], [2, 0, 0, 3]]
         self.height = len(grid)
         self.width = len(grid[0])
         self.grid = [[Cell(x) for x in y] for y in grid]
     
+    def updateCell(self, posx, posy, cell):
+        self.grid[posx][posy] = cell
+
     def getCell(self, posx, posy):
         return self.grid[posy][posx]               
 
@@ -34,6 +38,7 @@ class Mouse:
         self.grid = grid
         self.alive = True
         self.hasCheese = False
+        self.hasSmallCheese = False
     
     def updateState(self):
         cell = self.grid.getCell(self.posx, self.posy)
@@ -41,6 +46,9 @@ class Mouse:
             self.alive = False
         if cell == Cell.cheese:
             self.hasCheese = True
+        if cell == Cell.smallCheese:
+            self.hasSmallCheese = True
+            self.grid.updateCell(self.posx, self.posy, Cell.empty)
 
     def whatIfMove(self, direction):
         self.saveClass = self.__dict__
@@ -85,6 +93,7 @@ class Game:
         self.graphic = graphic
         self.xScale = 100
         self.yScale = 100
+        self.curStep = 0
         if graphic:
             pygame.init()
             self.screen = pygame.display.set_mode((self.grid.width*self.xScale, self.grid.height*self.yScale))
@@ -127,11 +136,11 @@ class Game:
             time.sleep(0.1)
 
     def getStateString(self):
-        return self.mouse.posx + self.mouse.posy * self.grid.height
-        temp = np.array(self.getState())
-        temp = temp.flatten()
-        temp = ''.join(map(str,map(int,list(temp))))
-        return temp
+        # print(self.mouse.posx + self.mouse.posy * self.grid.height)
+        # print("{0:b}".format(self.mouse.posx + self.mouse.posy * self.grid.height))
+        # print(tuple("{0:b}".format(self.mouse.posx + self.mouse.posy * self.grid.height).zfill(4)))
+        return np.array(list("{0:b}".format(self.mouse.posx + self.mouse.posy * self.grid.height).zfill(4))).astype(np.float)
+        # return self.mouse.posx + self.mouse.posy * self.grid.height
 
     def getState(self):
         temp = [[x for x in y] for y in self.grid.grid]
@@ -140,24 +149,30 @@ class Game:
     
     def test(self):
         if self.mouse.alive:
-            self.score += 0
+            self.score += 1
         else:
             self.score -= 1000
             self.end = True
         if self.mouse.hasCheese:
             self.score += 1000
             self.end = True    
+        if self.mouse.hasSmallCheese:
+            self.score += 100
+            self.mouse.hasSmallCheese = False
+        if self.curStep > 200:
+            self.end = True
     
     def reset(self):
         self.end = False
         self.score = 0
+        self.curStep = 0
         self.grid = Grid()
         self.mouse = Mouse(self.grid)
+        return self.getStateString()
 
     def makeMove(self, direction):
         self.move(direction)
         if (self.end):
-            print(self.score)
             self.reset()
 
     def whatIfMove(self, direction):
@@ -166,21 +181,31 @@ class Game:
         score = 0
         if not self.mouse.alive:
             score -= 1000
-        if self.mouse.hasCheese:
+        elif self.mouse.hasCheese:
             score += 1000
+        else:
+            score -= 1
         self.mouse.rollBack()
         return score
 
     def move(self, direction):
+        self.curStep += 1
         self.mouse.move(direction)
         self.test()
         self.display()
         return self.score
 
+    def render(self, mode):
+        self.display()
+
+    def step(self, action):
+        self.move(action)
+        return self.getStateString(), self.score, self.end, {}
 
 def main():
-    game = Game()
-    game.mainLoop()
+    game = Game(False)
+    # game.mainLoop()
+    game.getStateString()
 
 
 if __name__ == "__main__":
